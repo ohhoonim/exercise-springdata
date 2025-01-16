@@ -6,9 +6,11 @@ create table if not exists para_tag (
     constraint pk_para_tag primary key (tag_id)
 );
 
+alter table para_note alter column title type varchar(255);
+
 create table if not exists para_note (
     note_id varchar(36) not null,
-    title varchar(155),
+    title varchar(255),
     tag_id bigint,
     content text,
     constraint pk_para_note primary key (note_id),

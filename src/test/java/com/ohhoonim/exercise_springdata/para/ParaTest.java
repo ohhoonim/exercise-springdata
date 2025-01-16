@@ -3,28 +3,11 @@ package com.ohhoonim.exercise_springdata.para;
 import org.junit.Test;
 
 /*
-
-```plant
-@startuml
-skinparam monochrome reverse 
-
-title 새노트 작성하기 
-start
-:새노트 만들기;
-:제목입력;
-:내용입력;
-:저장;
-end
-
-@enduml
-```
-  
 ```plantuml
 @startuml
 skinparam monochrome reverse
 
 title PARA 분류하기
-
 
 state Inbox : 분류할 노트 
 
@@ -62,7 +45,6 @@ PARA --> [*] : Note 삭제
 
 @enduml
 ```
-  
  */
 
 

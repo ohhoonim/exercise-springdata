@@ -1,6 +1,7 @@
 package com.ohhoonim.exercise_springdata.para;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.ohhoonim.exercise_springdata.para.Para.Area;
@@ -10,7 +11,6 @@ import com.ohhoonim.exercise_springdata.para.Para.Resource;
 public record Note(
         UUID noteId,
         String title,
-        Tag tag,
         String content) {
 
     public interface Usecase {
@@ -29,5 +29,11 @@ public record Note(
         public Note modifyNote(Note modifiedNote);
 
         public Note newNote(Note newNote);
+
+        public Set<Tag> tags(UUID noteId);
+
+        public Set<Tag> addTag(UUID noteId, Tag tag);
+
+        public Set<Tag> removeTag(UUID noteId, Tag tag);
     }
 }
