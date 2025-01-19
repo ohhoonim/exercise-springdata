@@ -9,5 +9,9 @@ public interface NotePort {
     Note newNote(Note newNote);
 
     Note getNote(UUID noteId);
+
+    void save(Note modifiedNote);
+
+    void removeNote(UUID noteId);
     
 }

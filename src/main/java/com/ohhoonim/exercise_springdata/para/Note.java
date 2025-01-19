@@ -4,9 +4,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.ohhoonim.exercise_springdata.para.Para.Area;
 import com.ohhoonim.exercise_springdata.para.Para.Project;
-import com.ohhoonim.exercise_springdata.para.Para.Resource;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Archive;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Area;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Resource;
 
 public record Note(
         UUID noteId,
@@ -20,19 +21,21 @@ public record Note(
 
         public List<Resource> resources(UUID noteId);
 
-        public List<Para> addPara(UUID noteId, UUID paraId);
+        public List<Archive> archives(UUID noteId);
+
+        public void registPara(UUID noteId, Para para);
 
         public Note getNote(UUID noteId);
 
-        public Note removeNote(UUID noteId);
+        public void removeNote(UUID noteId);
 
         public Note modifyNote(Note modifiedNote);
 
-        public Note newNote(Note newNote);
+        public Note addNote(Note newNote);
 
         public Set<Tag> tags(UUID noteId);
 
-        public Set<Tag> addTag(UUID noteId, Tag tag);
+        public Set<Tag> registTag(UUID noteId, Tag tag);
 
         public Set<Tag> removeTag(UUID noteId, Tag tag);
     }

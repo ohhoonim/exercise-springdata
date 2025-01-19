@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 import com.ohhoonim.exercise_springdata.para.Note;
 import com.ohhoonim.exercise_springdata.para.Note.Usecase;
 import com.ohhoonim.exercise_springdata.para.Para;
-import com.ohhoonim.exercise_springdata.para.Para.Area;
 import com.ohhoonim.exercise_springdata.para.Para.Project;
-import com.ohhoonim.exercise_springdata.para.Para.Resource;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Archive;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Area;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf.Resource;
 import com.ohhoonim.exercise_springdata.para.Tag;
 import com.ohhoonim.exercise_springdata.para.port.NotePort;
 import com.ohhoonim.exercise_springdata.para.port.ProjectPort;
@@ -38,25 +39,33 @@ public class NoteService implements Usecase {
 
     @Override
     public List<Project> projects(UUID noteId) {
-        return null;
+        return projectPort.projectsInNote(noteId);
     }
 
     @Override
     public List<Area> areas(UUID noteId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'areas'");
+        return shelfPort.areasInNote(noteId);
     }
 
     @Override
     public List<Resource> resources(UUID noteId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'resources'");
+        return shelfPort.resourcesInNote(noteId);
     }
 
     @Override
-    public List<Para> addPara(UUID noteId, UUID paraId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addPara'");
+    public List<Archive> archives(UUID noteId) {
+        return shelfPort.archivesInNote(noteId);
+    }
+    @Override
+    public void registPara(UUID noteId, Para para) {
+        if (para == null || para.paraId() == null) {
+            throw new RuntimeException("id는 필수 입니다.");
+        }
+        if (para instanceof Project project) {
+            projectPort.registNote(noteId, project);
+        } else {
+            shelfPort.addNote(noteId, para);
+        }
     }
 
     @Override
@@ -65,19 +74,18 @@ public class NoteService implements Usecase {
     }
 
     @Override
-    public Note removeNote(UUID noteId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeNote'");
+    public void removeNote(UUID noteId) {
+        notePort.removeNote(noteId);
     }
 
     @Override
     public Note modifyNote(Note modifiedNote) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'modifyNote'");
+        notePort.save(modifiedNote);
+        return notePort.getNote(modifiedNote.noteId());
     }
 
     @Override
-    public Note newNote(Note newNote) {
+    public Note addNote(Note newNote) {
         return notePort.newNote(newNote);
     }
 
@@ -87,7 +95,7 @@ public class NoteService implements Usecase {
     }
 
     @Override
-    public Set<Tag> addTag(UUID noteId, Tag tag) {
+    public Set<Tag> registTag(UUID noteId, Tag tag) {
         tagPort.addTagInNote(noteId, tag);
         return tagPort.tagsInNote(noteId);
     }
