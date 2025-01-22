@@ -1,17 +1,22 @@
 package com.ohhoonim.exercise_springdata.para.port;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.ohhoonim.exercise_springdata.para.Note;
+import com.ohhoonim.exercise_springdata.para.Page;
 
 public interface NotePort {
 
-    Note newNote(Note newNote);
+    void addNote(Note newNote, UUID newNoteId);
 
-    Note getNote(UUID noteId);
+    Optional<Note> getNote(UUID noteId);
 
-    void save(Note modifiedNote);
+    void modifyNote(Note modifiedNote);
 
     void removeNote(UUID noteId);
+
+    List<Note> findNote(String searchString, Page page);
     
 }
