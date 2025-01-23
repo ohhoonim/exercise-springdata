@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+
 public record Note(
         UUID noteId,
         String title,

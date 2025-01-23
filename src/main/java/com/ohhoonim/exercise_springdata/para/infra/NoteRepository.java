@@ -7,7 +7,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -41,7 +43,7 @@ public class NoteRepository implements NotePort, TagPort {
 
     private final BiFunction<Note, UUID, Map<String, Object>> toParamMap = (newNote, newNoteId) -> {
         var map = new HashMap<String, Object>();
-        map.put("noteId", newNoteId);
+        map.put("noteId", newNoteId.toString());
         map.put("title", newNote.title());
         map.put("tagId", null);
         map.put("content", newNote.content());
@@ -59,10 +61,18 @@ public class NoteRepository implements NotePort, TagPort {
                     note_id = :noteId
                 """;
         return jdbcClient.sql(sql)
-                .param(noteId)
-                .query(Note.class)
+                .param("noteId", noteId.toString())
+                .query(rowmapper)
+                // .query(Note.class)
                 .optional();
     }
+
+    private final RowMapper<Note> rowmapper = ((rs, idx) -> {
+        return new Note(
+                UUID.fromString(rs.getString("note_id")),
+                rs.getString("title"),
+                rs.getString("content"));
+    });
 
     @Override
     public void modifyNote(Note modifiedNote) {
@@ -75,24 +85,34 @@ public class NoteRepository implements NotePort, TagPort {
                     note_id = :noteId
                 """;
         jdbcClient.sql(sql)
-                .paramSource(modifiedNote)
+                .params(toPramMap.apply(modifiedNote))
                 .update();
     }
+
+    private final Function<Note, Map<String, Object>> toPramMap = note -> {
+        Map<String, Object> map = new HashMap<>();
+        map.put("title", note.title());
+        map.put("content", note.content());
+        map.put("noteId", note.noteId().toString());
+        return map;
+    };
 
     @Override
     public void removeNote(UUID noteId) {
         var sql = """
                 delete from para_note where note_id = :noteId
                 """;
-        jdbcClient.sql(sql).param(noteId).update();
+        jdbcClient.sql(sql)
+            .param("noteId", noteId.toString())
+            .update();
     }
 
     @Override
     public Set<Tag> findTags(String tag, Page page) {
         var sql = """
                 select tag_id as tagId, tag from para_tag
-                where 
-                    tag_id > :lastSeenKey 
+                where
+                    tag_id > :lastSeenKey
                     tag like '%:tag%'
                 order by tag
                 limit :limit
@@ -113,12 +133,12 @@ public class NoteRepository implements NotePort, TagPort {
         }
         var sql = """
                 insert into para_note_tag (note_id, tag_id)
-                values(:noteId, :tagId) 
+                values(:noteId, :tagId)
                 """;
         jdbcClient.sql(sql)
-            .param("noteId", noteId)
-            .param("tagId", tagId)
-            .update();
+                .param("noteId", noteId.toString())
+                .param("tagId", tagId)
+                .update();
     }
 
     @SuppressWarnings("null")
@@ -130,37 +150,37 @@ public class NoteRepository implements NotePort, TagPort {
         jdbcClient.sql(sql).param("tag", tag.tag())
                 .update(keyHolder);
 
-        return jdbcClient.sql("select * from para_tag where tag_id = :tagId")
-                .param("tagId", keyHolder.getKey().longValue())
+        return jdbcClient.sql("select tag_id, tag from para_tag where tag_id = :tagId")
+                .param("tagId", keyHolder.getKeys().get("tag_id"))
                 .query(Tag.class).single();
     }
 
     @Override
     public Set<Tag> tagsInNote(UUID noteId) {
         var sql = """
-                select 
+                select
                     t.tag_id,
                     t.tag
                 from para_note_tag nt
-                join on para_tag t
+                join para_tag t
                 on nt.tag_id = t.tag_id
-                where nt.note_id = :noteId 
+                where nt.note_id = :noteId
                 """;
-        return jdbcClient.sql(sql).param("noteId", noteId)
+        return jdbcClient.sql(sql).param("noteId", noteId.toString())
                 .query(Tag.class).set();
     }
 
     @Override
     public void removeTagInNote(UUID noteId, Tag tag) {
         var sql = """
-                delete from para_note_tag 
+                delete from para_note_tag
                 where
-                    note_id = :noteId and tag_id = :tagId 
+                    note_id = :noteId and tag_id = :tagId
                 """;
         jdbcClient.sql(sql)
-            .param("noteId", noteId)
-            .param("tagId", tag.tagId())
-            .update();
+                .param("noteId", noteId.toString())
+                .param("tagId", tag.tagId())
+                .update();
     }
 
     @Override
