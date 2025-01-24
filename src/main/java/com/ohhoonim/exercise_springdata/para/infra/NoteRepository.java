@@ -113,7 +113,7 @@ public class NoteRepository implements NotePort, TagPort {
                 select tag_id as tagId, tag from para_tag
                 where
                     tag_id > :lastSeenKey
-                    tag like '%:tag%'
+                    and tag like '%:tag%'
                 order by tag
                 limit :limit
                 """;

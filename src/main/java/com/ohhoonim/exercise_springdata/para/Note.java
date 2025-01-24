@@ -5,8 +5,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-
 public record Note(
         UUID noteId,
         String title,
@@ -29,6 +27,10 @@ public record Note(
 
     public Note(Note note, Set<Tag> tags, List<Para> paras) {
         this(note.noteId(), note.title(), note.content(), tags, paras);
+    }
+
+    public Note(UUID noteId, String title) {
+        this(noteId, title, null, null, null);
     }
 
     public interface Usecase {
