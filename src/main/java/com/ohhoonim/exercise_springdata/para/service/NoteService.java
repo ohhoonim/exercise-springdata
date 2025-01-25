@@ -1,18 +1,20 @@
 package com.ohhoonim.exercise_springdata.para.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
 import com.ohhoonim.exercise_springdata.para.Note;
 import com.ohhoonim.exercise_springdata.para.Note.Usecase;
+import com.ohhoonim.exercise_springdata.para.Page;
 import com.ohhoonim.exercise_springdata.para.Para;
 import com.ohhoonim.exercise_springdata.para.Para.Project;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Archive;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Area;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Resource;
+import com.ohhoonim.exercise_springdata.para.Para.Shelf;
 import com.ohhoonim.exercise_springdata.para.Tag;
 import com.ohhoonim.exercise_springdata.para.port.NotePort;
 import com.ohhoonim.exercise_springdata.para.port.ProjectPort;
@@ -30,7 +32,7 @@ public class NoteService implements Usecase {
     public NoteService(NotePort notePort,
             ProjectPort projectPort,
             ShelfPort shelfPort,
-            TagPort tagPort ) {
+            TagPort tagPort) {
         this.notePort = notePort;
         this.projectPort = projectPort;
         this.shelfPort = shelfPort;
@@ -38,39 +40,13 @@ public class NoteService implements Usecase {
     }
 
     @Override
-    public List<Project> projects(UUID noteId) {
-        return projectPort.projectsInNote(noteId);
-    }
-
-    @Override
-    public List<Area> areas(UUID noteId) {
-        return shelfPort.areasInNote(noteId);
-    }
-
-    @Override
-    public List<Resource> resources(UUID noteId) {
-        return shelfPort.resourcesInNote(noteId);
-    }
-
-    @Override
-    public List<Archive> archives(UUID noteId) {
-        return shelfPort.archivesInNote(noteId);
-    }
-    @Override
-    public void registPara(UUID noteId, Para para) {
-        if (para == null || para.paraId() == null) {
-            throw new RuntimeException("id는 필수 입니다.");
+    public Optional<Note> getNote(UUID noteId) {
+        var note = notePort.getNote(noteId);
+        if (note.isEmpty()) {
+            throw new RuntimeException("노트가 존재하지 않습니다.");
         }
-        if (para instanceof Project project) {
-            projectPort.registNote(noteId, project);
-        } else {
-            shelfPort.addNote(noteId, para);
-        }
-    }
-
-    @Override
-    public Note getNote(UUID noteId) {
-        return notePort.getNote(noteId);
+        Set<Tag> tags = tagPort.tagsInNote(noteId);
+        return Optional.of(new Note(note.get(), tags));
     }
 
     @Override
@@ -79,14 +55,16 @@ public class NoteService implements Usecase {
     }
 
     @Override
-    public Note modifyNote(Note modifiedNote) {
-        notePort.save(modifiedNote);
-        return notePort.getNote(modifiedNote.noteId());
+    public Optional<Note> modifyNote(Note modifiedNote) {
+        notePort.modifyNote(modifiedNote);
+        return this.getNote(modifiedNote.noteId());
     }
 
     @Override
-    public Note addNote(Note newNote) {
-        return notePort.newNote(newNote);
+    public Optional<Note> addNote(Note newNote) {
+        var newNoteId = UUID.randomUUID();
+        notePort.addNote(newNote, newNoteId);
+        return this.getNote(newNoteId);
     }
 
     @Override
@@ -106,4 +84,40 @@ public class NoteService implements Usecase {
         return tagPort.tagsInNote(noteId);
     }
 
+    @Override
+    public void registPara(UUID noteId, Para para) {
+        if (para == null || para.paraId() == null) {
+            throw new RuntimeException("id는 필수 입니다.");
+        }
+        if (para instanceof Project project) {
+            projectPort.registNote(noteId, project);
+        } else {
+            shelfPort.registNote(noteId, (Shelf)para);
+        }
+    }
+
+    @Override
+    public Set<Para> paras(UUID noteId) {
+        Set<Para> projects = projectPort.findProjectInNote(noteId);
+        Set<Para> shelves = shelfPort.findShelfInNote(noteId);
+        
+        // TODO virtual thread로 바꿔보기
+
+        return Stream.of(projects, shelves)
+                .flatMap(p -> p != null ? p.stream() : null)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public void removePara(UUID noteId, Para para) {
+        switch(para) {
+            case Project p -> projectPort.removeNote(noteId, p);
+            case Shelf s -> shelfPort.removeNote(noteId, s);
+        }
+    }
+
+    @Override
+    public List<Note> findNote(String searchString, Page page) {
+        return notePort.findNote(searchString, page);
+    }
 }

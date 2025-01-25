@@ -2,25 +2,15 @@ package com.ohhoonim.exercise_springdata.para.port;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.ohhoonim.exercise_springdata.para.Note;
 import com.ohhoonim.exercise_springdata.para.Page;
 import com.ohhoonim.exercise_springdata.para.Para;
 import com.ohhoonim.exercise_springdata.para.Para.Shelf;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Archive;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Area;
-import com.ohhoonim.exercise_springdata.para.Para.Shelf.Resource;
 
 public interface ShelfPort {
-
-    List<Area> areasInNote(UUID noteId);
-
-    List<Resource> resourcesInNote(UUID noteId);
-
-    List<Archive> archivesInNote(UUID noteId);
-
-    void addNote(UUID noteId, Para para);
 
     List<Shelf> findShelves(String searchString, Page page);
 
@@ -39,5 +29,7 @@ public interface ShelfPort {
     void modifyShelf(Shelf s);
 
     void moveToPara(Para origin, Class<? extends Shelf> targetPara);
-    
+
+    Set<Para> findShelfInNote(UUID noteId);
+
 }

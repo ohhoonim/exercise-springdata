@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,26 +52,26 @@ public class NoteTest {
 
         // 새로운 노트 작성
         var noteId = UUID.randomUUID();
-        var newNote = new Note(noteId, "first note", "new contents");
-        when(notePort.newNote(any())).thenReturn(newNote);
+        var newNote = new Note(noteId, title, contents);
+        when(notePort.getNote(any())).thenReturn(Optional.of(newNote));
 
-        Note savedNote = noteService.addNote(notSaveNote);
-        assertThat(savedNote.noteId()).isEqualTo(noteId);
+        var savedNote = noteService.addNote(notSaveNote);
+        assertThat(savedNote.get().noteId()).isEqualTo(noteId);
+        verify(notePort, times(1)).addNote(any(), any());
 
         // 노트를 열어서 제목, 내용 수정
         when(notePort.getNote(any())).thenReturn(savedNote);
 
-        Note old = noteService.getNote(noteId);
+        var old = noteService.getNote(noteId);
         var newTitle = "new " + title;
         var newContents = "new " + contents;
-        var modifiedNote = new Note(old.noteId(), newTitle, newContents);
+        var modifiedNote = new Note(old.get().noteId(), newTitle, newContents);
 
-        when(notePort.getNote(any())).thenReturn(modifiedNote);
+        when(notePort.getNote(any())).thenReturn(Optional.of(modifiedNote));
 
-        Note newModifiedNote = noteService.modifyNote(modifiedNote);
-        assertThat(newModifiedNote.title()).isEqualTo("new first note");
-        verify(notePort, times(1)).save(any());
-
+        var newModifiedNote = noteService.modifyNote(modifiedNote);
+        assertThat(newModifiedNote.get().title()).isEqualTo("new first note");
+        verify(notePort, times(1)).modifyNote(any());
     }
 
     @InjectMocks
@@ -112,7 +113,7 @@ public class NoteTest {
     ParaService paraService;
 
     @Test
-    @DisplayName("노트 para 분류하기 - project 추가")
+    @DisplayName("노트 para 등록하기 - project 추가")
     public void addProjectTest() {
         // search project --> projecService
         Page page = new Page(null, 10, 1);
@@ -138,7 +139,7 @@ public class NoteTest {
     }
 
     @Test
-    @DisplayName("노트 para 분류하기 - area, resource, archive ")
+    @DisplayName("노트 para 등록하기 - shelf ")
     public void classifyNoteTest() {
         // search shelves
         List<Shelf> mockShelves = List.of(
@@ -154,31 +155,69 @@ public class NoteTest {
         Resource mockResource = new Resource(UUID.randomUUID(), "java", null);
         noteService.registPara(UUID.randomUUID(), mockResource);
 
-        verify(shelfPort, times(1)).addNote(any(), any());
+        verify(shelfPort, times(1)).registNote(any(), any());
+    }
+
+    @Test
+    @DisplayName("노트와 연결된 파라 목록 가져오기 ")
+    public void noteInParasTest() {
+        var noteId = UUID.randomUUID();
+
+        // when(projectPort.findProjectInNote(any()))
+            // .thenReturn(Set.of(new Project(UUID.randomUUID())));
+        when(projectPort.findProjectInNote(any())).thenReturn(null);
+        when(shelfPort.findShelfInNote(any()))
+            .thenReturn(Set.of(new Area(UUID.randomUUID())));
+
+        Set<Para> parasInNote = noteService.paras(noteId);
+        assertThat(parasInNote.size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("노트와 연결된 파라 제거하기")
+    public void noteInParaRemoveTest() {
+        var area = new Area(UUID.randomUUID());
+
+        noteService.removePara(UUID.randomUUID(), area);
+        verify(shelfPort, times(1))
+            .removeNote(any(UUID.class), any(Shelf.class));
+    }
+
+    @Test
+    @DisplayName("노트 검색하기 ")
+    public void findNoteTest() {
+        var findedNotes = List.of(
+            new Note(UUID.randomUUID(), "searchword is goog", null),
+            new Note(UUID.randomUUID(), "new note", "this content searchword")
+        ); 
+        when(notePort.findNote(any(), any())).thenReturn(findedNotes);
+
+        var results = noteService.findNote(
+            "searchword", 
+            new Page());
+        assertThat(results.size()).isEqualTo(2);
     }
 }
 
 /*
- * ```plantuml
- * 
- * @startuml
- * skinparam monochrome reverse
- * start
- * :create new note;
- * :input title, contents<
- * if (none classify) then
- * else
- * fork
- * :add project to note|
- * fork again
- * :add shelf to note|
- * fork again
- * :add tag|
- * endfork
- * endif
- * :save note/
- * stop
- * 
- * @enduml
- * ```
+```plantuml
+@startuml
+skinparam monochrome reverse
+start
+:create new note;
+:input title, contents<
+if (none classify) then
+else
+    fork
+        :add project to note|
+    fork again
+        :add shelf to note|
+    fork again
+        :add tag|
+    endfork
+endif
+:save note/
+stop
+@enduml
+```
  */

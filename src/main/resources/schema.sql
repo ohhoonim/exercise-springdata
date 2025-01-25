@@ -6,21 +6,16 @@ create table if not exists para_tag (
     constraint pk_para_tag primary key (tag_id)
 );
 
-alter table para_note alter column title type varchar(255);
-
 create table if not exists para_note (
     note_id varchar(36) not null,
     title varchar(255),
-    tag_id bigint,
     content text,
-    constraint pk_para_note primary key (note_id),
-    constraint fk_para_note_tag_id foreign key (tag_id) references para_tag(tag_id)
+    constraint pk_para_note primary key (note_id)
 );
 
 comment on table para_note is '노트';
 comment on column para_note.note_id is 'id';
 comment on column para_note.title is '제목';
-comment on column para_note.tag_id is 'tag id';
 comment on column para_note.content is '노트 내용';
 
 
