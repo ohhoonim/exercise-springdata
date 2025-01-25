@@ -155,7 +155,7 @@ public class NoteTest {
         Resource mockResource = new Resource(UUID.randomUUID(), "java", null);
         noteService.registPara(UUID.randomUUID(), mockResource);
 
-        verify(shelfPort, times(1)).addNote(any(), any());
+        verify(shelfPort, times(1)).registNote(any(), any());
     }
 
     @Test

@@ -12,9 +12,6 @@ import com.ohhoonim.exercise_springdata.para.Para.Shelf;
 
 public interface ShelfPort {
 
-
-    void addNote(UUID noteId, Para para);
-
     List<Shelf> findShelves(String searchString, Page page);
 
     void addShelf(Shelf s, UUID newParaId);
@@ -34,5 +31,5 @@ public interface ShelfPort {
     void moveToPara(Para origin, Class<? extends Shelf> targetPara);
 
     Set<Para> findShelfInNote(UUID noteId);
-    
+
 }

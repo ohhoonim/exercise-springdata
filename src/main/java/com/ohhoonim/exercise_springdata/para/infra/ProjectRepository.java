@@ -46,7 +46,7 @@ public class ProjectRepository implements ProjectPort {
         map.put("content", project.content());
         map.put("start_date", project.startDate());
         map.put("end_date", project.endDate());
-        map.put("status", project.status());
+        map.put("status", project.status() == null ? null : project.status().toString());
         return map;
     };
 

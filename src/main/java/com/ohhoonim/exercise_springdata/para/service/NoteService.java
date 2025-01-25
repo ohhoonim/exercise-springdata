@@ -92,7 +92,7 @@ public class NoteService implements Usecase {
         if (para instanceof Project project) {
             projectPort.registNote(noteId, project);
         } else {
-            shelfPort.addNote(noteId, para);
+            shelfPort.registNote(noteId, (Shelf)para);
         }
     }
 
